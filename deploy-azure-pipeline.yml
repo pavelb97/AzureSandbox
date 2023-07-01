@@ -1,0 +1,80 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  storage_rg: 'pebble_assignment' 
+  storage_name: 'pebblepipeline'
+  storage_container: 'tfstate'
+  storage_key: 'pebblepipeline.terraform.com'
+
+stages:
+  - stage: terraform_validate
+    jobs:
+      - job: validate
+        continueOnError: false
+        steps:
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Init'
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'service_connection_tester'
+              backendAzureRmResourceGroupName: '$(storage_rg)'
+              backendAzureRmStorageAccountName: '$(storage_name)'
+              backendAzureRmContainerName: '$(storage_container)'
+              backendAzureRmKey: '$(storage_key)'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Validate'
+            inputs:
+              provider: 'azurerm'
+              command: 'validate'
+  - stage: terraform_deploy
+    condition: succeeded('terraform_validate')
+    dependsOn: terraform_validate
+    jobs:
+      - job: apply
+        steps:
+          - task: TerraformInstaller@1
+            displayName: 'Install Terraform'
+            inputs:
+              terraformVersion: 'latest'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Init'
+            inputs:
+              provider: 'azurerm'
+              command: 'init'
+              backendServiceArm: 'service_connection_tester'
+              backendAzureRmResourceGroupName: '$(storage_rg)'
+              backendAzureRmStorageAccountName: '$(storage_name)'
+              backendAzureRmContainerName: '$(storage_container)'
+              backendAzureRmKey: '$(storage_key)'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Plan'
+            inputs:
+              provider: 'azurerm'
+              command: 'plan'
+              environmentServiceNameAzureRM: 'service_connection_tester'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Apply'
+            inputs:
+              provider: 'azurerm'
+              command: 'apply'
+              commandOptions: '-input=false'
+              environmentServiceNameAzureRM: 'service_connection_tester'
