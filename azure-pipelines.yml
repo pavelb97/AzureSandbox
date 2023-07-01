@@ -35,7 +35,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              backendServiceArm: 'service_connection_tester'
+              backendServiceArm: 'pebble_assignment_SP'
               backendAzureRmResourceGroupName: '$(storage_rg)'
               backendAzureRmStorageAccountName: '$(storage_name)'
               backendAzureRmContainerName: '$(storage_container)'
@@ -60,7 +60,7 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'init'
-              backendServiceArm: 'service_connection_tester'
+              backendServiceArm: 'pebble_assignment_SP'
               backendAzureRmResourceGroupName: '$(storage_rg)'
               backendAzureRmStorageAccountName: '$(storage_name)'
               backendAzureRmContainerName: '$(storage_container)'
@@ -70,11 +70,12 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'plan'
-              environmentServiceNameAzureRM: 'service_connection_tester'
+              environmentServiceNameAzureRM: 'pebble_assignment_SP'
           - task: TerraformTaskV4@4
             displayName: 'Terraform Apply'
             inputs:
               provider: 'azurerm'
               command: 'apply'
               commandOptions: '-input=false'
-              environmentServiceNameAzureRM: 'service_connection_tester'
+              environmentServiceNameAzureRM: 'pebble_assignment_SP'
+              
