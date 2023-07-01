@@ -9,8 +9,6 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id            = "a4e59050-bf58-4a23-941a-974fafd931ad"
-  skip_provider_registration = true     # Prevents School & Personal credential clashing
 }
 
 resource "azurerm_resource_group" "resource_group" {
@@ -25,6 +23,7 @@ resource "azurerm_storage_account" "storage_account" {
   location = var.location
   account_tier = "Standard"
   account_replication_type = "LRS"      # Local Redundant Storage
+
 }
 
 # FAs require a ASP - used to define the scope of resources associated with the FA
@@ -32,8 +31,6 @@ resource "azurerm_service_plan" "app_service_plan" {
   name                = "${var.project}-app-service-plan"
   resource_group_name = azurerm_resource_group.resource_group.name
   location            = var.location
-  #kind                = "FunctionApp"
-  #reserved = true                       # Must be set to true for linux
   sku_name = "B1"
   os_type = "Linux"
 }
@@ -50,8 +47,11 @@ resource "azurerm_function_app" "function_app" {
   
   app_service_plan_id        = azurerm_service_plan.app_service_plan.id
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE"    = "https://${azurerm_storage_account.storage_account.name}.blob.core.windows.net/${azurerm_storage_container.app_container.name}/${azurerm_storage_blob.storage_blob.name}${data.azurerm_storage_account_blob_container_sas.container_sas.sas}",
-    "FUNCTIONS_WORKER_RUNTIME" = "dotnet",
+    "FUNCTIONS_WORKER_RUNTIME" = "python",
+    "WEBSITE_RUN_FROM_PACKAGE" = "https://${azurerm_storage_account.storage_account.name}.blob.core.windows.net/${azurerm_storage_container.app_container.name}/${azurerm_storage_blob.storage_blob.name}${data.azurerm_storage_account_blob_container_sas.container_sas.sas}",
+    }
+  site_config {
+        linux_fx_version= "Python|3.8" 
   }
 }
 
@@ -69,14 +69,14 @@ resource "azurerm_storage_container" "app_container" {
 }
 
 resource "azurerm_storage_blob" "storage_blob" {
-  name = "${filesha256(data.archive_file.app_source.output_path)}.zip"
+  name = "${data.archive_file.app_source.output_path}"
   storage_account_name = azurerm_storage_account.storage_account.name
   storage_container_name = azurerm_storage_container.app_container.name
   type = "Block"
   source = data.archive_file.app_source.output_path
 }
 
-# Shared access signiture - Limits access to blob storage
+# # Shared access signiture - Limits access to blob storage
 data "azurerm_storage_account_blob_container_sas" "container_sas" {
   connection_string = azurerm_storage_account.storage_account.primary_connection_string
   container_name    = azurerm_storage_container.app_container.name
