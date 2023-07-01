@@ -76,4 +76,6 @@ stages:
             inputs:
               provider: 'azurerm'
               command: 'apply'
+              commandOptions: '-input=false'
               environmentServiceNameAzureRM: 'pebble_assignment_SP'
+              
