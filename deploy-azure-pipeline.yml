@@ -70,8 +70,22 @@ stages:
               environmentServiceNameAzureRM: 'service_connection_tester'
           - task: TerraformTaskV4@4
             displayName: 'Terraform Apply'
+            timeoutInMinutes: 15
+            condition: failed('terraform_destroy')
             inputs:
               provider: 'azurerm'
               command: 'apply'
+              commandOptions: '-input=false'
+              environmentServiceNameAzureRM: 'service_connection_tester'
+  - stage: terraform_destroy
+    dependsOn: terraform_deploy
+    jobs:
+      - job: destroy
+        steps:
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Destroy'
+            inputs:
+              provider: 'azurerm'
+              command: 'destroy'
               commandOptions: '-input=false'
               environmentServiceNameAzureRM: 'service_connection_tester'
