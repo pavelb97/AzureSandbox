@@ -18,6 +18,7 @@ variables:
   storage_rg: 'pebble_assignment' 
   storage_name: 'pebblepipeline'
   storage_container: 'tfstate'
+  storage_key: 'pebblepipeline.terraform.com'
 
 stages:
   - stage: terraform_validate
@@ -38,6 +39,7 @@ stages:
               backendAzureRmResourceGroupName: '$(storage_rg)'
               backendAzureRmStorageAccountName: '$(storage_name)'
               backendAzureRmContainerName: '$(storage_container)'
+              backendAzureRmKey: '$(storage_key)'
           - task: TerraformTaskV4@4
             displayName: 'Terraform Validate'
             inputs:
@@ -62,6 +64,7 @@ stages:
               backendAzureRmResourceGroupName: '$(storage_rg)'
               backendAzureRmStorageAccountName: '$(storage_name)'
               backendAzureRmContainerName: '$(storage_container)'
+              backendAzureRmKey: '$(storage_key)'
           - task: TerraformTaskV4@4
             displayName: 'Terraform Plan'
             inputs:
