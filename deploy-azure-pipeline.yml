@@ -18,7 +18,7 @@ variables:
   storage_rg: 'pebble_assignment' 
   storage_name: 'pebblepipeline'
   storage_container: 'tfstate'
-  storage_key: 'pebblepipeline.terraform.com'
+  storage_key: 'pebble_assignment.pebblepipeline.tfstate'
 
 stages:
   - stage: terraform_validate
@@ -73,8 +73,18 @@ stages:
               environmentServiceNameAzureRM: 'service_connection_tester'
           - task: TerraformTaskV4@4
             displayName: 'Terraform Apply'
+            timeoutInMinutes: 5
             inputs:
               provider: 'azurerm'
               command: 'apply'
               commandOptions: '-input=false'
               environmentServiceNameAzureRM: 'service_connection_tester'
+          - task: TerraformTaskV4@4
+            displayName: 'Terraform Destroy'
+            condition: failed()
+            inputs:
+              provider: 'azurerm'
+              command: 'destroy'
+              commandOptions: '-input=false'
+              environmentServiceNameAzureRM: 'service_connection_tester'
+         
